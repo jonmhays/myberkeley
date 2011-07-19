@@ -103,11 +103,11 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-      <url>https://source.sakaiproject.org/maven2/</url>
+      <url>http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-production/</url>
     </repository>
     <repository>
       <id>myberkeley-snapshots</id>
-      <url>http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-snapshots</url>
+      <url>http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-production-snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -117,7 +117,7 @@
     </repository>
     <repository>
       <id>myberkeley</id>
-      <url>http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley</url>
+      <url>http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-production</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -129,7 +129,7 @@
       <id>sakai-snapshots</id>
       <name>Sakai Snapshots</name>
       <layout>default</layout>
-      <url>http://source.sakaiproject.org/maven2-snapshots</url>
+      <url>http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-production-snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -252,13 +252,13 @@
     <snapshotRepository>
       <id>myberkeley-snapshots</id>
       <name>MyBerkeley Snapshots</name>
-      <url>dav:http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-snapshots/</url>
+      <url>dav:http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-production-snapshots/</url>
       <uniqueVersion>false</uniqueVersion>
     </snapshotRepository>
     <repository>
       <id>myberkeley</id>
       <name>MyBerkeley</name>
-      <url>dav:http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley/</url>
+      <url>dav:http://svn.media.berkeley.edu/nexus/content/repositories/myberkeley-production/</url>
       <uniqueVersion>false</uniqueVersion>
     </repository>
   </distributionManagement>
