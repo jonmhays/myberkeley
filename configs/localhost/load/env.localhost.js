@@ -1,5 +1,5 @@
 define(["config/config"], function(config) {
-    config.isDev = true;
+    config.isDev = false;
 
     // Tracking and statistics
     config.Tracking = {
@@ -7,5 +7,7 @@ define(["config/config"], function(config) {
             WebPropertyID : "UA-21809393-3"
         }
     };
-
+    config.showSakai2=true;
+    config.useLiveSakai2Feeds=true;
+    config.hybridCasHost="xgrid-dev.media.berkeley.edu";    
 });
