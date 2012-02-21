@@ -11,7 +11,7 @@ SRC_LOC=$1
 
 INPUT_FILE="$SRC_LOC/.build.cf"
 if [ -f $INPUT_FILE ]; then
-    =`awk -F"=" '/^APPLICATION_PASSWORD=/ {print $2}' $INPUT_FILE`
+  SLING_PASSWORD=`awk -F"=" '/^APPLICATION_PASSWORD=/ {print $2}' $INPUT_FILE`
   SHARED_SECRET=`awk -F"=" '/^SHARED_SECRET=/ {print $2}' $INPUT_FILE`
   X_SAKAI_TOKEN_SHARED_SECRET=`awk -F"=" '/^X_SAKAI_TOKEN_SHARED_SECRET=/ {print $2}' $INPUT_FILE`
   CONFIG_FILE_DIR=`awk -F"=" '/^CONFIG_FILE_DIR=/ {print $2}' $INPUT_FILE`
@@ -19,9 +19,7 @@ if [ -f $INPUT_FILE ]; then
   ORACLE_PASSWORD=`awk -F"=" '/^ORACLE_PASSWORD=/ {print $2}' $INPUT_FILE`
   ORACLE_URL=`awk -F"=" '/^ORACLE_URL=/ {print $2}' $INPUT_FILE`
   ORACLE_DB=`awk -F"=" '/^ORACLE_DB=/ {print $2}' $INPUT_FILE`
-  ORACLE_OAE_DB=`awk -F"=" '/^ORACLE_OAE_DB=/ {print $2}' $INPUT_FILE`
-  ORACLE_OAE_USERNAME=`awk -F"=" '/^ORACLE_OAE_USERNAME=/ {print $2}' $INPUT_FILE`
-  ORACLE_OAE_PASSWORD=`awk -F"=" '/^ORACLE_OAE_PASSWORD=/ {print $2}' $INPUT_FILE`
+  MYSQL_PASSWORD=`awk -F"=" '/^MYSQL_PASSWORD=/ {print $2}' $INPUT_FILE`
 else
   SLING_PASSWORD='admin'
   SHARED_SECRET='SHARED_SECRET_CHANGE_ME_IN_PRODUCTION'
@@ -68,7 +66,7 @@ if [ -z "$CONFIG_FILE_DIR" ]; then
   echo "Not updating local configuration files..." | $LOGIT
 else
   CONFIG_FILES="$SRC_LOC/myberkeley/configs/$CONFIG_FILE_DIR/load"
-  STORAGE_FILES="$SRC_LOC/myberkeley/scripts/oracle"
+  STORAGE_FILES="$SRC_LOC/myberkeley/scripts/mysql"
   echo "Updating local configuration files..." | $LOGIT
 
   # put the shared secret into config file
@@ -111,16 +109,16 @@ else
     mv -f $FOREIGN_PRINCIPAL_CFG.new $FOREIGN_PRINCIPAL_CFG
   fi
 
-  # Fix Oracle OAE password.
-  if [ $ORACLE_OAE_PASSWORD ]; then
+  # Fix MySQL password.
+  if [ $MYSQL_PASSWORD ]; then
     SPARSE_CONFIG=$STORAGE_FILES/JDBCStorageClientPool.config
     if [ -f $SPARSE_CONFIG ]; then
-      sed -e "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $SPARSE_CONFIG > $SPARSE_CONFIG.new
+      sed "s/ironchef/$MYSQL_PASSWORD/g" $SPARSE_CONFIG > $SPARSE_CONFIG.new
       mv $SPARSE_CONFIG.new $SPARSE_CONFIG
     fi
     JCR_CONFIG=$STORAGE_FILES/repository.xml
     if [ -f $JCR_CONFIG ]; then
-      sed "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $JCR_CONFIG > $JCR_CONFIG.new
+      sed "s/ironchef/$MYSQL_PASSWORD/g" $JCR_CONFIG > $JCR_CONFIG.new
       mv $JCR_CONFIG.new $JCR_CONFIG
     fi
   fi
@@ -133,7 +131,7 @@ echo "`date`: Doing clean..." | $LOGIT
 mvn -B -e clean >>$LOG 2>&1
 
 echo "`date`: Starting sling..." | $LOGIT
-mvn -B -e -Dsling.start -Dmyb.sling.config=$SRC_LOC/myberkeley/scripts/oracle -P runner verify >>$LOG 2>&1
+mvn -B -e -Dsling.start -Dmyb.sling.config=$SRC_LOC/myberkeley/scripts/mysql -P runner verify >>$LOG 2>&1
 
 # wait 2 minutes so sling can get going
 sleep 120;
