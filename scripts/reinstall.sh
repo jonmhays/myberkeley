@@ -120,7 +120,7 @@ else
     fi
     JCR_CONFIG=$STORAGE_FILES/repository.xml
     if [ -f $JCR_CONFIG ]; then
-      sed "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $JCR_CONFIG > $JCR_CONFIG.new
+      sed -e "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $JCR_CONFIG > $JCR_CONFIG.new
       mv $JCR_CONFIG.new $JCR_CONFIG
     fi
   fi
