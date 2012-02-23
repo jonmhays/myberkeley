@@ -97,7 +97,7 @@
       <param name="user" value="ORACLE_OAE_USERNAME" />
       <param name="password" value="ironchef" />
       <param name="schema" value="oracle" />
-      <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+      <param name="schemaObjectPrefix" value="versioning_"/>
       <param name="externalBLOBs" value="false" />
     </PersistenceManager>
 
