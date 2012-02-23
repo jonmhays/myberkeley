@@ -65,7 +65,7 @@
     <!-- Use Oracle for Jackrabbit storage -->
     <PersistenceManager
       class="org.apache.jackrabbit.core.persistence.db.OraclePersistenceManager">
-      <param name="driver" value="oracle.jdbc.OracleDriver" />
+      <param name="driver" value="oracle.jdbc.driver.OracleDriver" />
       <param name="url"
         value="jdbc:oracle:thin:@ORACLE_OAE_DB" />
       <param name="user" value="ORACLE_OAE_USERNAME" />
@@ -91,7 +91,7 @@
     <!-- Use Oracle for Jackrabbit storage -->
     <PersistenceManager
       class="org.apache.jackrabbit.core.persistence.db.OraclePersistenceManager">
-      <param name="driver" value="oracle.jdbc.OracleDriver" />
+      <param name="driver" value="oracle.jdbc.driver.OracleDriver" />
       <param name="url"
         value="jdbc:oracle:thin:@ORACLE_OAE_DB" />
       <param name="user" value="ORACLE_OAE_USERNAME" />
