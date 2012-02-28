@@ -51,7 +51,7 @@
             <bundle>
               <groupId>org.sakaiproject.nakamura</groupId>
               <artifactId>org.sakaiproject.nakamura.uxloader-myberkeley</artifactId>
-              <version>1.1</version>
+              <version>1.1.1</version>
               <startLevel>30</startLevel>
             </bundle>
             <bundle>
