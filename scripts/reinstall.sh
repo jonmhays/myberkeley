@@ -2,7 +2,7 @@
 
 # script to reinstall myberkeley on calcentral-dev/calcentral-qa, while preserving content repository
 
-if [ -z "$1" ]; then
+if [ -z "$2" ]; then
     echo "Usage: $0 source_root logfile"
     exit;
 fi
@@ -19,9 +19,11 @@ if [ -f $INPUT_FILE ]; then
   ORACLE_PASSWORD=`awk -F"=" '/^ORACLE_PASSWORD=/ {print $2}' $INPUT_FILE`
   ORACLE_URL=`awk -F"=" '/^ORACLE_URL=/ {print $2}' $INPUT_FILE`
   ORACLE_DB=`awk -F"=" '/^ORACLE_DB=/ {print $2}' $INPUT_FILE`
+  OAE_DATABASE=`awk -F"=" '/^OAE_DATABASE=/ {print $2}' $INPUT_FILE`
   ORACLE_OAE_DB=`awk -F"=" '/^ORACLE_OAE_DB=/ {print $2}' $INPUT_FILE`
   ORACLE_OAE_USERNAME=`awk -F"=" '/^ORACLE_OAE_USERNAME=/ {print $2}' $INPUT_FILE`
   ORACLE_OAE_PASSWORD=`awk -F"=" '/^ORACLE_OAE_PASSWORD=/ {print $2}' $INPUT_FILE`
+  MYSQL_PASSWORD=`awk -F"=" '/^MYSQL_PASSWORD=/ {print $2}' $INPUT_FILE`
 else
   SLING_PASSWORD='admin'
   SHARED_SECRET='SHARED_SECRET_CHANGE_ME_IN_PRODUCTION'
@@ -64,7 +66,7 @@ echo "------------------------------------------" | $LOGIT
 
 cd ../myberkeley
 
-STORAGE_FILES="$SRC_LOC/myberkeley/scripts/oracle"
+STORAGE_FILES="$SRC_LOC/myberkeley/scripts/$OAE_DATABASE"
 if [ -z "$CONFIG_FILE_DIR" ]; then
   echo "Not updating local configuration files..." | $LOGIT
 else
@@ -111,18 +113,38 @@ else
     mv -f $FOREIGN_PRINCIPAL_CFG.new $FOREIGN_PRINCIPAL_CFG
   fi
 
-  # Fix Oracle OAE storage connection.
-  if [ $ORACLE_OAE_PASSWORD ]; then
-    SPARSE_CONFIG=$STORAGE_FILES/JDBCStorageClientPool.config
-    if [ -f $SPARSE_CONFIG ]; then
-      sed -e "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $SPARSE_CONFIG > $SPARSE_CONFIG.new
-      mv $SPARSE_CONFIG.new $SPARSE_CONFIG
+  if [ $OAE_DATABASE == 'oracle' ]; then
+    echo "Configuring for oracle" | $LOGIT
+    # Fix Oracle OAE storage connection.
+    if [ $ORACLE_OAE_PASSWORD ]; then
+      SPARSE_CONFIG=$STORAGE_FILES/JDBCStorageClientPool.config
+      if [ -f $SPARSE_CONFIG ]; then
+        sed -e "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $SPARSE_CONFIG > $SPARSE_CONFIG.new
+        mv $SPARSE_CONFIG.new $SPARSE_CONFIG
+      fi
+      JCR_CONFIG=$STORAGE_FILES/repository.xml
+      if [ -f $JCR_CONFIG ]; then
+        sed -e "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $JCR_CONFIG > $JCR_CONFIG.new
+        mv $JCR_CONFIG.new $JCR_CONFIG
+      fi
     fi
-    JCR_CONFIG=$STORAGE_FILES/repository.xml
-    if [ -f $JCR_CONFIG ]; then
-      sed -e "s/ORACLE_OAE_DB/$ORACLE_OAE_DB/g" -e "s/ORACLE_OAE_USERNAME/$ORACLE_OAE_USERNAME/g" -e "s/ironchef/$ORACLE_OAE_PASSWORD/g" $JCR_CONFIG > $JCR_CONFIG.new
-      mv $JCR_CONFIG.new $JCR_CONFIG
-    fi
+  elif [ $OAE_DATABASE == 'mysql' ]; then
+    echo "Configuring for mysql" | $LOGIT
+    # Fix MySQL password.
+    if [ $MYSQL_PASSWORD ]; then
+      SPARSE_CONFIG=$STORAGE_FILES/JDBCStorageClientPool.config
+      if [ -f $SPARSE_CONFIG ]; then
+        sed "s/ironchef/$MYSQL_PASSWORD/g" $SPARSE_CONFIG > $SPARSE_CONFIG.new
+        mv $SPARSE_CONFIG.new $SPARSE_CONFIG
+      fi
+      JCR_CONFIG=$STORAGE_FILES/repository.xml
+      if [ -f $JCR_CONFIG ]; then
+        sed "s/ironchef/$MYSQL_PASSWORD/g" $JCR_CONFIG > $JCR_CONFIG.new
+        mv $JCR_CONFIG.new $JCR_CONFIG
+      fi
+    fi  
+  else
+    echo "unknown database $OAE_DATABASE" | $LOGIT
   fi
 
   rm $SRC_LOC/myberkeley/working/load/*
@@ -143,4 +165,3 @@ mvn -B -e -P runner -Dsling.install-ux -Dsling.password=$SLING_PASSWORD clean ve
 
 echo | $LOGIT
 echo "`date`: Reinstall complete." | $LOGIT
-
