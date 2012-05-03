@@ -7,5 +7,7 @@ define(["config/config"], function(config) {
             WebPropertyID : "UA-21809393-1"
         }
     };
-
+    config.showSakai2=true;
+    config.useLiveSakai2Feeds=true;
+    config.hybridCasHost="bspace.berkeley.edu";
 });
