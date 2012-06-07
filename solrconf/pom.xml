@@ -92,6 +92,14 @@
                   preservetype="true">
                   <insert path="/schema/fields/field[last()]" position="after" file="schema.xml.fields.txt"/>
                 </xmltask>
+                <xmltask
+                  source="${project.build.directory}/generated-resources/SLING-INF/home/solr/solrconfig.xml"
+                  dest="${project.build.directory}/processed-resources/SLING-INF/home/solr/solrconfig.xml"
+                  preservetype="true">
+                  <replace path="/config/query/filterCache/@size" withText="4096"/>
+                  <replace path="/config/query/queryResultCache/@size" withText="16384"/>
+                  <replace path="/config/query/documentCache/@size" withText="4096"/>
+                </xmltask>
                 <!-- Package the configuration files for embedded Solr -->
                 <copy todir="${project.build.directory}/packaged-resources">
                   <fileset dir="${project.build.directory}/processed-resources"/>

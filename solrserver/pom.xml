@@ -12,7 +12,8 @@
   <properties>
     <working.dir>${project.basedir}/../working</working.dir>
     <server.dir>${working.dir}/solr</server.dir>
-  </properties>
+    <solr.memory>512m</solr.memory>
+ </properties>
   <profiles>
   </profiles>
   <build>
@@ -82,7 +83,7 @@
                 <java jar="${server.dir}/start.jar"
                       fork="true" spawn="true"
                       dir="${server.dir}">
-                  <jvmarg value="-Xmx512m"/>
+                  <jvmarg value="-Xmx${solr.memory}"/>
                   <jvmarg value="-server"/>
                   <sysproperty key="solr.solr.home" value="${server.dir}/solr"/>
                   <sysproperty key="jetty.port" value="8983"/>
