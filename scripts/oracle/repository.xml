@@ -38,11 +38,11 @@
 
       <AccessManager
       class="org.apache.jackrabbit.core.security.DefaultAccessManager">
-    <!-- 
+    <!--
     <AccessManager
       class="org.apache.sling.jcr.jackrabbit.server.impl.security.PluggableDefaultAccessManager">
      -->
-  
+
     </AccessManager>
 
 

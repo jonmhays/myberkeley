@@ -69,6 +69,12 @@
       "email": "ray@media.berkeley.edu",
       "myb-demographics" : ["/colleges/ETS TEST/standings/undergrad", "/colleges/ETS TEST/standings/undergrad/majors/RAY"]
     },
+    "192517": {
+      "lastName": "Lin",
+      "firstName": "Yu-Hung",
+      "email": "yuhung@media.berkeley.edu",
+      "myb-demographics" : ["/colleges/ETS TEST/standings/grad", "/colleges/ETS TEST/standings/grad/majors/YUHUNG"]
+    },
     "208861": {
       "lastName": "Bloodworth",
       "firstName": "Allison",

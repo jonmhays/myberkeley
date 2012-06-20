@@ -39,6 +39,10 @@
       "groups" : [ "myb-staff", "AccountAdministrators"],
       "demographics" : ["/colleges/ETS TEST/standings/undergrad", "/colleges/ETS TEST/standings/undergrad/majors/RAY"]
     },
+    "192517": {
+      "groups" : [ "myb-staff", "AccountAdministrators"],
+      "demographics" : ["/colleges/ETS TEST/standings/grad", "/colleges/ETS TEST/standings/grad/majors/YUHUNG"]
+    },
     "208861": {
         "groups" : [ "myb-staff"],
         "demographics" : ["/colleges/ETS TEST/standings/grad", "/colleges/ETS TEST/standings/grad/majors/ALLISON"]

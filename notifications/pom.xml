@@ -3,7 +3,7 @@
     <parent>
         <artifactId>edu.berkeley.myberkeley.base</artifactId>
         <groupId>edu.berkeley.myberkeley</groupId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.3.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>edu.berkeley.myberkeley.notifications</artifactId>
@@ -77,13 +77,13 @@
         <dependency>
             <groupId>org.sakaiproject.nakamura</groupId>
             <artifactId>org.sakaiproject.nakamura.search.api</artifactId>
-            <version>1.2.0</version>
+            <version>1.3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.sakaiproject.nakamura</groupId>
             <artifactId>org.sakaiproject.nakamura.messaging</artifactId>
-            <version>1.2.0</version>
+            <version>1.3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
