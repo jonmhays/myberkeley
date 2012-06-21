@@ -67,7 +67,7 @@
     </dependency>
     <dependency>
       <groupId>org.sakaiproject.nakamura</groupId>
-      <artifactId>org.sakaiproject.nakamura.user</artifactId>
+      <artifactId>org.sakaiproject.nakamura.user.api</artifactId>
     </dependency>
 
 <!-- Sling -->
