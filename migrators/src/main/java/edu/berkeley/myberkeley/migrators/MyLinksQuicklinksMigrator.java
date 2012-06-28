@@ -59,6 +59,7 @@ public class MyLinksQuicklinksMigrator implements PropertyMigrator {
 					content.setProperty("name", "quicklinks");
 					if (properties.containsKey("name") 
 							&& properties.get("name").toString().equalsIgnoreCase("mylinks")) {
+						LOGGER.info("Path: " + path + " modified, key:\"name\", value: quicklinks");
 						properties.put("name", "quicklinks");
 					}
 					modified = true;
