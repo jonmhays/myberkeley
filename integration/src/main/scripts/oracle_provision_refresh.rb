@@ -33,6 +33,22 @@ module Net::HTTPHeader
   end
 end
 
+## patch to override method to allow setting timeout until we can get the nakamura gem patched
+## because the initial requests from oracle_data_loader can timeout on default timout value of 60 seconds
+module SlingInterface
+  class Sling
+    def createHttp(uri)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.read_timeout = 600
+      if (uri.scheme == 'https')
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+    return http
+    end
+  end
+end
+
 module MyBerkeleyData
   COLLEGES = "'ENV DSGN', 'NAT RES'"
   CALCENTRAL_TEAM_GROUP = "CalCentral-Team"
