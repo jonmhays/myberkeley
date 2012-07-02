@@ -29,6 +29,22 @@ module Net::HTTPHeader
   end
 end
 
+## patch to override method to allow setting timeout until we can get the nakamura gem patched
+## because the initial requests from oracle_data_loader can timeout on default timout value of 60 seconds
+module SlingInterface
+  class Sling
+    def createHttp(uri)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.read_timeout = 600
+      if (uri.scheme == 'https')
+        http.use_ssl = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+    return http
+    end
+  end
+end
+
 module MyBerkeleyData
   COLLEGES = "'ENV DSGN', 'NAT RES'"
   CALCENTRAL_TEAM_GROUP = "CalCentral-Team"
@@ -56,11 +72,11 @@ module MyBerkeleyData
       ActiveRecord::Base.logger = Logger.new(STDOUT)
       #requires a TNSNAMES.ORA file and a TNS_ADMIN env variable pointing to directory containing it
       conn = ActiveRecord::Base.establish_connection(
-          :adapter  => "oracle_enhanced",
-          :username => @oracle_user,
-          :password => @oracle_password,
-          :database => @oracle_sid
-         )
+	  :adapter  => "oracle_enhanced",
+	  :username => @oracle_user,
+	  :password => @oracle_password,
+	  :database => @oracle_sid
+	 )
     end
 
     def collect_integrated_accounts
@@ -84,68 +100,68 @@ module MyBerkeleyData
       profile_val = ''
       attributes_map = student_row.attributes()
       (1..4).each do |i|
-        major_field = "major_name"
-        major_title = "major_title"
-        if (i > 1)
-          major_field += i.to_s
-          major_title += i.to_s
-        end
-        major_val = attributes_map[major_field].to_s.strip
-        if (!major_val.empty?)
-          major_title_val = attributes_map[major_title].to_s.strip
-          major_val = major_title_val if (!major_title_val.empty?)
-          if (i == 2)
-            profile_val += " : "
-          elsif (i > 2)
-            profile_val += " ; "
-          end
-          profile_val += major_val
-        end
+	major_field = "major_name"
+	major_title = "major_title"
+	if (i > 1)
+	  major_field += i.to_s
+	  major_title += i.to_s
+	end
+	major_val = attributes_map[major_field].to_s.strip
+	if (!major_val.empty?)
+	  major_title_val = attributes_map[major_title].to_s.strip
+	  major_val = major_title_val if (!major_title_val.empty?)
+	  if (i == 2)
+	    profile_val += " : "
+	  elsif (i > 2)
+	    profile_val += " ; "
+	  end
+	  profile_val += major_val
+	end
       end
       if (!profile_val.empty?)
-        user_props['major'] = profile_val
+	user_props['major'] = profile_val
       end
     end
 
     def determine_demographics(user_props, person_row)
       myb_demographics = user_props["myb-demographics"] || []
       if (is_current_student(person_row))
-        if (!person_row.ug_grad_flag.nil?)
-          case person_row.ug_grad_flag.strip
-          when 'G'
-            standing_val = '/standings/grad'
-            major_segment = '/standings/grad/majors/'
-          when 'U'
-            standing_val = '/standings/undergrad'
-            major_segment = '/standings/undergrad/majors/'
-          end
-        end
-        if (!person_row.level_desc_s.nil?)
-          myb_demographics.push("/student/educ_level/#{person_row.level_desc_s.strip}")
-        end
-        if (!person_row.new_trfr_flag.nil?)
-          myb_demographics.push("/student/new_trfr_flag/#{person_row.new_trfr_flag.strip}")
-        end
-        if (standing_val.nil?)
-          @log.warn("Current student #{person_row.ldap_uid.to_i.to_s} has unrecognized UG_GRAD_FLAG #{person_row.ug_grad_flag}; no demographics")
-        else
-          attributes_map = person_row.attributes()
-          (1..4).each do |i|
-            college_field = "college_abbr"
-            major_field = "major_name"
-            if (i > 1)
-              college_field += i.to_s
-              major_field += i.to_s
-            end
-            college_val = attributes_map[college_field].to_s.strip
-            major_val = attributes_map[major_field].to_s.strip
-            if (!major_val.empty?)
-              myb_demographics.push("/colleges/" + college_val + standing_val)
-              myb_demographics.push("/colleges/" + college_val + major_segment + major_val)
-            end
-          end
-          myb_demographics.uniq!
-        end
+	if (!person_row.ug_grad_flag.nil?)
+	  case person_row.ug_grad_flag.strip
+	  when 'G'
+	    standing_val = '/standings/grad'
+	    major_segment = '/standings/grad/majors/'
+	  when 'U'
+	    standing_val = '/standings/undergrad'
+	    major_segment = '/standings/undergrad/majors/'
+	  end
+	end
+	if (!person_row.level_desc_s.nil?)
+	  myb_demographics.push("/student/educ_level/#{person_row.level_desc_s.strip}")
+	end
+	if (!person_row.new_trfr_flag.nil?)
+	  myb_demographics.push("/student/new_trfr_flag/#{person_row.new_trfr_flag.strip}")
+	end
+	if (standing_val.nil?)
+	  @log.warn("Current student #{person_row.ldap_uid.to_i.to_s} has unrecognized UG_GRAD_FLAG #{person_row.ug_grad_flag}; no demographics")
+	else
+	  attributes_map = person_row.attributes()
+	  (1..4).each do |i|
+	    college_field = "college_abbr"
+	    major_field = "major_name"
+	    if (i > 1)
+	      college_field += i.to_s
+	      major_field += i.to_s
+	    end
+	    college_val = attributes_map[college_field].to_s.strip
+	    major_val = attributes_map[major_field].to_s.strip
+	    if (!major_val.empty?)
+	      myb_demographics.push("/colleges/" + college_val + standing_val)
+	      myb_demographics.push("/colleges/" + college_val + major_segment + major_val)
+	    end
+	  end
+	  myb_demographics.uniq!
+	end
       end
       @log.info("For person #{person_row.ldap_uid.to_i.to_s}, demographics = #{myb_demographics.inspect}")
       user_props["myb-demographics"] = myb_demographics
@@ -158,48 +174,48 @@ module MyBerkeleyData
     # Modeled after bSpace's EduAffliationsMapper
     def determine_role(user_props, person_row)
       user_props['role'] = if person_row.affiliations.include?("STUDENT-TYPE-REGISTERED")
-        if !person_row.ug_grad_flag.nil?
-          UG_GRAD_FLAG_MAP[person_row.ug_grad_flag.strip.to_sym]
-        else
-          "Student" # There are 730 of these in the DB
-        end
+	if !person_row.ug_grad_flag.nil?
+	  UG_GRAD_FLAG_MAP[person_row.ug_grad_flag.strip.to_sym]
+	else
+	  "Student" # There are 730 of these in the DB
+	end
       elsif person_row.affiliations.include?("EMPLOYEE-TYPE-ACADEMIC")
-        "Instructor"
+	"Instructor"
       elsif person_row.affiliations.include?("EMPLOYEE-TYPE-STAFF")
-        "Staff"
+	"Staff"
       elsif person_row.affiliations.include?("AFFILIATE-TYPE-VISITING")
-        "Instructor"
+	"Instructor"
       else
-        "Guest"
+	"Guest"
       end
     end
 
     def determine_college(user_props, student_row)
       if (!student_row.college_abbr.nil?)
-        profile_val = student_row.college_abbr.strip
-        if (COLLEGE_ABBR_TO_PROFILE[profile_val])
-          profile_val = COLLEGE_ABBR_TO_PROFILE[profile_val]
-        end
+	profile_val = student_row.college_abbr.strip
+	if (COLLEGE_ABBR_TO_PROFILE[profile_val])
+	  profile_val = COLLEGE_ABBR_TO_PROFILE[profile_val]
+	end
       end
       if (!profile_val.nil?)
-        user_props['college'] = profile_val
+	user_props['college'] = profile_val
       end
     end
 
     def select_students_from_colleges(colleges)
       student_rows =  MyBerkeleyData::Student.find_by_sql(
-        "select pi.STUDENT_LDAP_UID as LDAP_UID, pi.UG_GRAD_FLAG, pi.FIRST_NAME, pi.LAST_NAME,
-           pi.STUDENT_EMAIL_ADDRESS as EMAIL_ADDRESS, pi.STU_NAME as PERSON_NAME, pi.AFFILIATIONS,
-           sm.MAJOR_NAME, sm.MAJOR_TITLE, sm.COLLEGE_ABBR, sm.MAJOR_NAME2, sm.MAJOR_TITLE2, sm.COLLEGE_ABBR2,
-           sm.MAJOR_NAME3, sm.MAJOR_TITLE3, sm.COLLEGE_ABBR3, sm.MAJOR_NAME4, sm.MAJOR_TITLE4, sm.COLLEGE_ABBR4,
-           sm.MAJOR_CD, sm.MAJOR_CD2, sm.MAJOR_CD3, sm.MAJOR_CD4,
-           sp.LEVEL_DESC_S, st.NEW_TRFR_FLAG
-           from BSPACE_STUDENT_MAJOR_VW sm join BSPACE_STUDENT_INFO_VW pi on pi.STUDENT_LDAP_UID = sm.LDAP_UID
-           left join BSPACE_STUDENT_PORTAL_VW sp on pi.STUDENT_LDAP_UID = sp.LDAP_UID
-           left join BSPACE_STUDENT_TERM_VW st on pi.STUDENT_LDAP_UID = st.LDAP_UID
-           where (sm.COLLEGE_ABBR in (#{colleges}) or sm.COLLEGE_ABBR2 in (#{colleges}) or
-             sm.COLLEGE_ABBR3 in (#{colleges}) or sm.COLLEGE_ABBR4  in (#{colleges}))
-           and pi.AFFILIATIONS like '%STUDENT-TYPE-REGISTERED%'"
+	"select pi.STUDENT_LDAP_UID as LDAP_UID, pi.UG_GRAD_FLAG, pi.FIRST_NAME, pi.LAST_NAME,
+	   pi.STUDENT_EMAIL_ADDRESS as EMAIL_ADDRESS, pi.STU_NAME as PERSON_NAME, pi.AFFILIATIONS,
+	   sm.MAJOR_NAME, sm.MAJOR_TITLE, sm.COLLEGE_ABBR, sm.MAJOR_NAME2, sm.MAJOR_TITLE2, sm.COLLEGE_ABBR2,
+	   sm.MAJOR_NAME3, sm.MAJOR_TITLE3, sm.COLLEGE_ABBR3, sm.MAJOR_NAME4, sm.MAJOR_TITLE4, sm.COLLEGE_ABBR4,
+	   sm.MAJOR_CD, sm.MAJOR_CD2, sm.MAJOR_CD3, sm.MAJOR_CD4,
+	   sp.LEVEL_DESC_S, st.NEW_TRFR_FLAG
+	   from BSPACE_STUDENT_MAJOR_VW sm join BSPACE_STUDENT_INFO_VW pi on pi.STUDENT_LDAP_UID = sm.LDAP_UID
+	   left join BSPACE_STUDENT_PORTAL_VW sp on pi.STUDENT_LDAP_UID = sp.LDAP_UID
+	   left join BSPACE_STUDENT_TERM_VW st on pi.STUDENT_LDAP_UID = st.LDAP_UID
+	   where (sm.COLLEGE_ABBR in (#{colleges}) or sm.COLLEGE_ABBR2 in (#{colleges}) or
+	     sm.COLLEGE_ABBR3 in (#{colleges}) or sm.COLLEGE_ABBR4  in (#{colleges}))
+	   and pi.AFFILIATIONS like '%STUDENT-TYPE-REGISTERED%'"
       )
       return student_rows
     end
@@ -207,48 +223,48 @@ module MyBerkeleyData
     def load_single_account(user_id, preset_props={})
       # The ID must be numeric.
       if (/^([\d]+)$/ =~ user_id)
-        persondata = MyBerkeleyData::Person.find_by_sql(
-        "select pi.LDAP_UID, pi.UG_GRAD_FLAG, pi.FIRST_NAME, pi.LAST_NAME,
-           pi.EMAIL_ADDRESS, pi.PERSON_NAME, pi.AFFILIATIONS,
-           sm.MAJOR_NAME, sm.MAJOR_TITLE, sm.COLLEGE_ABBR, sm.MAJOR_NAME2, sm.MAJOR_TITLE2, sm.COLLEGE_ABBR2,
-           sm.MAJOR_NAME3, sm.MAJOR_TITLE3, sm.COLLEGE_ABBR3, sm.MAJOR_NAME4, sm.MAJOR_TITLE4, sm.COLLEGE_ABBR4,
-           sm.MAJOR_CD, sm.MAJOR_CD2, sm.MAJOR_CD3, sm.MAJOR_CD4,
-           sp.LEVEL_DESC_S, st.NEW_TRFR_FLAG
-           from BSPACE_PERSON_INFO_VW pi
-           left join BSPACE_STUDENT_MAJOR_VW sm on pi.LDAP_UID = sm.LDAP_UID
-           left join BSPACE_STUDENT_PORTAL_VW sp on pi.LDAP_UID = sp.LDAP_UID
-           left join BSPACE_STUDENT_TERM_VW st on pi.LDAP_UID = st.LDAP_UID
-           where pi.LDAP_UID = #{user_id}"
-        )
-        if (!persondata.empty?)
-          load_user_from_row(persondata[0], false, preset_props)
-        else
-          @log.warn("Could not find DB record for user ID #{user_id} - RECONCILE MANUALLY")
-        end
+	persondata = MyBerkeleyData::Person.find_by_sql(
+	"select pi.LDAP_UID, pi.UG_GRAD_FLAG, pi.FIRST_NAME, pi.LAST_NAME,
+	   pi.EMAIL_ADDRESS, pi.PERSON_NAME, pi.AFFILIATIONS,
+	   sm.MAJOR_NAME, sm.MAJOR_TITLE, sm.COLLEGE_ABBR, sm.MAJOR_NAME2, sm.MAJOR_TITLE2, sm.COLLEGE_ABBR2,
+	   sm.MAJOR_NAME3, sm.MAJOR_TITLE3, sm.COLLEGE_ABBR3, sm.MAJOR_NAME4, sm.MAJOR_TITLE4, sm.COLLEGE_ABBR4,
+	   sm.MAJOR_CD, sm.MAJOR_CD2, sm.MAJOR_CD3, sm.MAJOR_CD4,
+	   sp.LEVEL_DESC_S, st.NEW_TRFR_FLAG
+	   from BSPACE_PERSON_INFO_VW pi
+	   left join BSPACE_STUDENT_MAJOR_VW sm on pi.LDAP_UID = sm.LDAP_UID
+	   left join BSPACE_STUDENT_PORTAL_VW sp on pi.LDAP_UID = sp.LDAP_UID
+	   left join BSPACE_STUDENT_TERM_VW st on pi.LDAP_UID = st.LDAP_UID
+	   where pi.LDAP_UID = #{user_id}"
+	)
+	if (!persondata.empty?)
+	  load_user_from_row(persondata[0], false, preset_props)
+	else
+	  @log.warn("Could not find DB record for user ID #{user_id} - RECONCILE MANUALLY")
+	end
       else
-        @log.warn("Could not find DB record for user ID #{user_id} - RECONCILE MANUALLY")
+	@log.warn("Could not find DB record for user ID #{user_id} - RECONCILE MANUALLY")
       end
     end
 
     def load_user_from_row(person_row, fake_email=false, preset_props={})
       props = make_user_props(person_row, preset_props)
       if (fake_email)
-        props['email'] = "#{props['firstName'].gsub(/[\s']*/,'').downcase}.#{props['lastName'].gsub(/[\s']*/,'').downcase}@example.edu"
+	props['email'] = "#{props['firstName'].gsub(/[\s']*/,'').downcase}.#{props['lastName'].gsub(/[\s']*/,'').downcase}@example.edu"
       end
       person_uid = person_row.ldap_uid.to_i.to_s
       (user, new_user) = @ucb_data_loader.load_user(person_uid, props)
       if (@remaining_accounts.include?(person_uid))
-        @synchronized_accounts.push(person_uid)
-        @remaining_accounts.delete(person_uid)
+	@synchronized_accounts.push(person_uid)
+	@remaining_accounts.delete(person_uid)
       else
-        if (new_user)
-          @new_users.push(person_uid)
-        else
-          demog = props["myb-demographics"]
-          if (!demog.nil? && !demog.empty?)
-            @renewed_accounts.push(person_uid)
-          end
-        end
+	if (new_user)
+	  @new_users.push(person_uid)
+	else
+	  demog = props["myb-demographics"]
+	  if (!demog.nil? && !demog.empty?)
+	    @renewed_accounts.push(person_uid)
+	  end
+	end
       end
       user
     end
@@ -258,35 +274,35 @@ module MyBerkeleyData
       students = select_students_from_colleges(COLLEGES)
       @log.info("DB returned #{students.length} student records for colleges #{COLLEGES}")
       students.each do |s|
-        load_user_from_row(s, fake_email)
+	load_user_from_row(s, fake_email)
       end
     end
 
     def drop_stale_accounts
       iterating_copy = Array.new(@remaining_accounts)
       iterating_copy.each do |account_uid|
-        drop_account(account_uid)
+	drop_account(account_uid)
       end
     end
 
     def drop_account(account_uid)
       # Delete demographic.
       res = @sling.execute_post(@sling.url_for("~#{account_uid}.myb-demographic.html"), {
-        "myb-demographics@Delete" => ""
+	"myb-demographics@Delete" => ""
       })
 
       # Delete obsolete profile sections.
       res = @sling.execute_post(@sling.url_for("~#{account_uid}/public/authprofile/email.profile.json"), {
-        ":operation" => "import",
-        ":contentType" => "json",
-        ":removeTree" => "true",
-        ":content" => '{"elements":{}}'
+	":operation" => "import",
+	":contentType" => "json",
+	":removeTree" => "true",
+	":content" => '{"elements":{}}'
       })
       res = @sling.execute_post(@sling.url_for("~#{account_uid}/public/authprofile/institutional.profile.json"), {
-        ":operation" => "import",
-        ":contentType" => "json",
-        ":removeTree" => "true",
-        ":content" => '{"elements":{}}'
+	":operation" => "import",
+	":contentType" => "json",
+	":removeTree" => "true",
+	":content" => '{"elements":{}}'
       })
 
       @dropped_accounts.push(account_uid)
@@ -297,44 +313,44 @@ module MyBerkeleyData
       file_data = JSON.load(File.open("additional_ucb_users_json.js", "r"))
       users_data = file_data["users"]
       users_data.each do |user_data|
-        @log.info("user_data = #{user_data.inspect}")
-        user_id = user_data[0]
-        user_extras = user_data[1]
-        predefined_props = {
-        	"myb-demographics" => user_extras["demographics"]
-        }
-        loaded_user = load_single_account(user_id, predefined_props)
-        if (!loaded_user.nil?)
-          groups = user_extras["groups"]
-          if (!groups.nil?)
-            groups.each do |group_id|
-              @ucb_data_loader.add_user_to_group(user_id, group_id)
-            end
-          end
-        end
+	@log.info("user_data = #{user_data.inspect}")
+	user_id = user_data[0]
+	user_extras = user_data[1]
+	predefined_props = {
+		"myb-demographics" => user_extras["demographics"]
+	}
+	loaded_user = load_single_account(user_id, predefined_props)
+	if (!loaded_user.nil?)
+	  groups = user_extras["groups"]
+	  if (!groups.nil?)
+	    groups.each do |group_id|
+	      @ucb_data_loader.add_user_to_group(user_id, group_id)
+	    end
+	  end
+	end
       end
     end
 
     def check_stale_accounts
       iterating_copy = Array.new(@remaining_accounts)
       iterating_copy.each do |account_uid|
-        if (@participants.include?(account_uid))
-          @log.info("Refreshing old participant #{account_uid}")
-          loaded_user = load_single_account(account_uid)
-          @remaining_accounts.delete(account_uid)
-        end
+	if (@participants.include?(account_uid))
+	  @log.info("Refreshing old participant #{account_uid}")
+	  loaded_user = load_single_account(account_uid)
+	  @remaining_accounts.delete(account_uid)
+	end
       end
     end
 
     def get_student_count(dynamicListContext, collegeId)
       res = @sling.execute_get(@sling.url_for("var/myberkeley/dynamiclists/#{dynamicListContext}.json"), {
-        "criteria" => "{ANY:['/colleges/#{collegeId}/standings/grad','/colleges/#{collegeId}/standings/undergrad']}"
+	"criteria" => "{ANY:['/colleges/#{collegeId}/standings/grad','/colleges/#{collegeId}/standings/undergrad']}"
       })
       if (res.code == "200")
-        return (JSON.parse(res.body))["count"]
+	return (JSON.parse(res.body))["count"]
       else
-        @log.warn("Not able to check number of students: #{res.code}, #{res.body}")
-        return "Unknown"
+	@log.warn("Not able to check number of students: #{res.code}, #{res.body}")
+	return "Unknown"
       end
    end
 
@@ -352,27 +368,27 @@ module MyBerkeleyData
       @log.info("#{cnrStudentCount} CNR Students")
       res = @sling.execute_get(@sling.url_for("~#{CALCENTRAL_TEAM_GROUP}.json"))
       if (res.code == "200")
-        messagebody = "* Synchronized #{@synchronized_accounts.length} existing accounts\n" +
-          "* Added #{@new_users.length} new users\n" +
-          "* Renewed #{@renewed_accounts.length} synchronizations\n" +
-          "* Dropped #{@dropped_accounts.length} synchronizations\n" +
-          "* #{cedStudentCount} CED Students\n" +
-          "* #{cnrStudentCount} CNR Students\n" +
-          "* #{@participants.length} participants\n"
-        subjectline = Time.now.strftime("%Y-%m-%d") + " Oracle account updates"
-        res = @sling.execute_post(@sling.url_for("~admin/message.create.html"), {
-          "sakai:type" => "internal",
-          "sakai:sendstate" => "pending",
-          "sakai:messagebox" => "outbox",
-          "sakai:to" => "internal:#{CALCENTRAL_TEAM_GROUP}",
-          "sakai:from" => "admin",
-          "sakai:subject" => subjectline,
-          "sakai:body" => messagebody,
-          "sakai:category" => "message"
-        })
-        if (res.code != "200")
-          @log.warn("Not able to send status update: #{res.code}, #{res.body}")
-        end
+	messagebody = "* Synchronized #{@synchronized_accounts.length} existing accounts\n" +
+	  "* Added #{@new_users.length} new users\n" +
+	  "* Renewed #{@renewed_accounts.length} synchronizations\n" +
+	  "* Dropped #{@dropped_accounts.length} synchronizations\n" +
+	  "* #{cedStudentCount} CED Students\n" +
+	  "* #{cnrStudentCount} CNR Students\n" +
+	  "* #{@participants.length} participants\n"
+	subjectline = Time.now.strftime("%Y-%m-%d") + " Oracle account updates"
+	res = @sling.execute_post(@sling.url_for("~admin/message.create.html"), {
+	  "sakai:type" => "internal",
+	  "sakai:sendstate" => "pending",
+	  "sakai:messagebox" => "outbox",
+	  "sakai:to" => "internal:#{CALCENTRAL_TEAM_GROUP}",
+	  "sakai:from" => "admin",
+	  "sakai:subject" => subjectline,
+	  "sakai:body" => messagebody,
+	  "sakai:category" => "message"
+	})
+	if (res.code != "200")
+	  @log.warn("Not able to send status update: #{res.code}, #{res.body}")
+	end
       end
     end
 
