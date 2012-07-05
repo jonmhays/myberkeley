@@ -68,7 +68,7 @@
                 <copy verbose="true" todir="${server.dir}" overwrite="true">
                   <fileset dir="${project.build.directory}/solrconf"/>
                 </copy>
-                <copy todir="${working.dir}">
+                <copy verbose="true" todir="${working.dir}" overwrite="true">
                   <fileset dir="${basedir}/src/main/resources"/>
                 </copy>
               </target>
