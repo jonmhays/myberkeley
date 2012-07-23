@@ -62,9 +62,20 @@
             <configuration>
               <target>
                 <mkdir dir="${server.dir}"/>
+                <delete dir="${server.dir}/webapps/solr" />
                 <copy verbose="true" todir="${server.dir}" overwrite="false">
                     <fileset dir="${project.build.directory}/solrjar"/>
                 </copy>
+                <!-- explode war -->
+                <move file="${server.dir}/webapps/solr.war" tofile="${server.dir}/webapps/solr_tmp.war" />
+                <mkdir dir="${server.dir}/webapps/solr" />
+                <unzip src="${server.dir}/webapps/solr_tmp.war" dest="${server.dir}/webapps/solr" />
+                <dependencyfilesets prefix="mydeps."/>
+                <copy todir="${server.dir}/webapps/solr/WEB-INF/lib/">
+                    <fileset refid="mydeps.org.sakaiproject.nakamura:org.sakaiproject.nakamura.solr:jar" />
+                </copy>
+                <!-- cleanup -->
+                <delete file="${server.dir}/webapps/solr_tmp.war" />
                 <copy verbose="true" todir="${server.dir}" overwrite="true">
                   <fileset dir="${project.build.directory}/solrconf"/>
                 </copy>
@@ -119,6 +130,12 @@
       <groupId>edu.berkeley.myberkeley</groupId>
       <artifactId>edu.berkeley.myberkeley.solrjar</artifactId>
       <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject.nakamura</groupId>
+      <artifactId>org.sakaiproject.nakamura.solr</artifactId>
+      <version>1.5-SNAPSHOT</version>
       <scope>runtime</scope>
     </dependency>
   </dependencies>
