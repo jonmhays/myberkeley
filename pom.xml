@@ -442,7 +442,7 @@
         <artifactId>jackrabbit-api</artifactId>
         <version>2.1.1</version>
         <scope>provided</scope>
-      </dependency>      
+      </dependency>
       <dependency>
         <groupId>org.mnode.ical4j</groupId>
         <artifactId>ical4j</artifactId>
@@ -476,7 +476,7 @@
       <dependency>
         <groupId>org.sakaiproject.nakamura</groupId>
         <artifactId>org.sakaiproject.nakamura.solr</artifactId>
-        <version>1.5-SNAPSHOT</version>
+        <version>1.4.3-SNAPSHOT</version>
         <scope>provided</scope>
       </dependency>
       <dependency>

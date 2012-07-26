@@ -48,7 +48,6 @@
                 <artifactItem>
                   <groupId>org.sakaiproject.nakamura</groupId>
                   <artifactId>org.sakaiproject.nakamura.solr</artifactId>
-                  <version>1.5-SNAPSHOT</version>
                   <outputDirectory>${project.build.directory}/generated-resources/SLING-INF/home/solr</outputDirectory>
                   <includes>schema.xml,solrconfig.xml,solr.xml</includes>
                 </artifactItem>
