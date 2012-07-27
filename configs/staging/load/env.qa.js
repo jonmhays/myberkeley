@@ -7,5 +7,7 @@ define(["config/config"], function(config) {
             WebPropertyID : "UA-21809393-2"
         }
     };
-
+    config.showSakai2=true;
+    config.useLiveSakai2Feeds=true;
+    config.hybridCasHost="sakai-qa.berkeley.edu";	// what do we use for bspace staging?
 });
