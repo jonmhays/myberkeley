@@ -88,7 +88,7 @@ In OSX 10.5 I needed to do the following:
 
 sudo gem update
 sudo gem install json
-sudo gem install curb  
+sudo gem install curb
 sudo gem install nakamura
 
 If you are running OS X 10.6, the following commands work:
@@ -105,10 +105,10 @@ https://confluence.sakaiproject.org/x/9IIpB
 
 
 4. Start the server:
-mvn -P runner -Dsling.start verify 
+mvn -P runner -Dsling.start verify
 
 To stop, use:
-mvn -P runner -Dsling.stop verify 
+mvn -P runner -Dsling.stop verify
 
 To clean out the old server environment including repository:
 mvn -P runner -Dsling.clean clean
@@ -118,7 +118,7 @@ To clean the server of deployed and cached bundles while leaving repository and 
 mvn -P runner -Dsling.purge clean
 
 
-5. To load test data, make sure the server, then run from the myberkeley directory
+5. To load test data, make sure the server is running, then run from the myberkeley directory:
 
 mvn -P runner -Dsling.loaddata integration-test
 
@@ -132,7 +132,7 @@ where ${server} should be replaced with a full server URL such as https://calcen
 NOTE: the trailing slash on the server URL is required
 
 All users will be given the password "testuser".
- 
+
 
 6. The above user-load includes records keyed to the LDAP UIDs of MyBerkeley project
 members, letting us test CAS authentication. When running MyBerkeley on your own
