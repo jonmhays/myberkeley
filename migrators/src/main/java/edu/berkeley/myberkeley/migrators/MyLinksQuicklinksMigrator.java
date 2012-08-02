@@ -27,76 +27,76 @@ import com.google.common.collect.ImmutableMap;
 @Component
 public class MyLinksQuicklinksMigrator implements PropertyMigrator { 
 
-	@Reference
-	transient protected Repository repository;
-	
-	//contains the regex patterns for matching the path for dashboard widgets.
-	private static final String loadedMyLinksWidgetLocation = "a:\\d+/private/privspace/id[\\w/]+/dashboard/[\\w/]+array[\\w]+";
+    @Reference
+    transient protected Repository repository;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MyLinksQuicklinksMigrator.class);
+    //contains the regex patterns for matching the path for dashboard widgets.
+    private static final String loadedMyLinksWidgetLocation = "a:\\d+/private/privspace/id[\\w/]+/dashboard/[\\w/]+array[\\w]+";
 
-	@Override
-	public boolean migrate(String rid, Map<String, Object> properties) {	
-		if (properties == null) {
-			return false;
-		}
-		
-		boolean modified = false;
-		
-		if (properties.containsKey("_path")) {
-			Session session = null;
-			try {
-				session = repository.loginAdministrative();
-				String path = properties.get("_path").toString();
-				Content content = session.getContentManager().get(path);
-				
-				//should move everyone's preloaded mylinks widget to quicklinks. 
-				//Ignoring data storage issues since quicklinks widget will handle data migration.
-				if (content != null 
-						&& content.getPath().matches(loadedMyLinksWidgetLocation)
-						&& content.hasProperty("name") 
-						&& content.getProperty("name").toString().equalsIgnoreCase("mylinks")) {
-					content.setProperty("name", "quicklinks");
-					if (properties.containsKey("name") 
-							&& properties.get("name").toString().equalsIgnoreCase("mylinks")) {
-						LOGGER.info("Path: " + path + " modified, key:\"name\", value: quicklinks");
-						properties.put("name", "quicklinks");
-					}
-					modified = true;
-				}
-			} catch (AccessDeniedException e) {
-				LOGGER.error(e.getMessage(), e);
-			} catch (ClientPoolException e) {
-				LOGGER.error(e.getMessage(), e);
-			} catch (StorageClientException e) {
-				LOGGER.error(e.getMessage(), e);
-			} finally {
-				if (session != null) {
-					try {
-						session.logout();
-					} catch (ClientPoolException e) {
-						LOGGER.error("Unexpected exception logging out of session", e);
-					}
-				}
-			}
-		}
+    private static final Logger LOGGER = LoggerFactory.getLogger(MyLinksQuicklinksMigrator.class);
 
-		return modified;
-	}
+    @Override
+    public boolean migrate(String rid, Map<String, Object> properties) {	
+        if (properties == null) {
+            return false;
+        }
 
-	@Override
-	public String[] getDependencies() {
-		return new String[0];
-	}
+        boolean modified = false;
 
-	@Override
-	public String getName() {
-		return MyLinksQuicklinksMigrator.class.getName();
-	}
+        if (properties.containsKey("_path")) {
+            Session session = null;
+            try {
+                session = repository.loginAdministrative();
+                String path = properties.get("_path").toString();
+                Content content = session.getContentManager().get(path);
 
-	@Override
-	public Map<String, String> getOptions() {
-		return ImmutableMap.of(PropertyMigrator.OPTION_RUNONCE, "false");
-	}
+                //should move everyone's preloaded mylinks widget to quicklinks. 
+                //Ignoring data storage issues since quicklinks widget will handle data migration.
+                if (content != null 
+                        && content.getPath().matches(loadedMyLinksWidgetLocation)
+                        && content.hasProperty("name") 
+                        && content.getProperty("name").toString().equalsIgnoreCase("mylinks")) {
+                    content.setProperty("name", "quicklinks");
+                    if (properties.containsKey("name") 
+                            && properties.get("name").toString().equalsIgnoreCase("mylinks")) {
+                        LOGGER.info("Path: " + path + " modified, key:\"name\", value: quicklinks");
+                        properties.put("name", "quicklinks");
+                    }
+                    modified = true;
+                }
+            } catch (AccessDeniedException e) {
+                LOGGER.error(e.getMessage(), e);
+            } catch (ClientPoolException e) {
+                LOGGER.error(e.getMessage(), e);
+            } catch (StorageClientException e) {
+                LOGGER.error(e.getMessage(), e);
+            } finally {
+                if (session != null) {
+                    try {
+                        session.logout();
+                    } catch (ClientPoolException e) {
+                        LOGGER.error("Unexpected exception logging out of session", e);
+                    }
+                }
+            }
+        }
+
+        return modified;
+    }
+
+    @Override
+    public String[] getDependencies() {
+        return new String[0];
+    }
+
+    @Override
+    public String getName() {
+        return MyLinksQuicklinksMigrator.class.getName();
+    }
+
+    @Override
+    public Map<String, String> getOptions() {
+        return ImmutableMap.of(PropertyMigrator.OPTION_RUNONCE, "false");
+    }
 
 }
