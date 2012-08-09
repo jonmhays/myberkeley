@@ -88,7 +88,7 @@ public class HybridSitesMigrator implements PropertyMigrator {
                     }
                     return modified;
                 }
-                
+
                 //insert the "My bSpace sites" into the lhnavigation menu and set up datastores.
                 //XXX: section is worth extracting into a separate method...
                 if (content != null && content.getPath().matches(privSpace)) {
@@ -104,7 +104,32 @@ public class HybridSitesMigrator implements PropertyMigrator {
                             LOGGER.error("Could not parse structure0 into JSON");
                         }
                         Iterable<String> privChildren = content.listChildPaths();
-                        JSONObject structure0JsonAdditions = setupSakai2sitesStructure(privChildren);
+                        JSONObject structure0JsonAdditions = null;
+                        if (structure0 != null && !structure0.has("sakai2sites")) {
+                            structure0JsonAdditions = setupSakai2sitesStructure(privChildren);
+                            // Shift some of the other items around as well.
+                            JSONObject newStructure0 = new JSONObject();
+                            for (Iterator<String> keys = structure0.keys(); keys.hasNext();) {
+                                String keyName = "";
+                                try {
+                                    keyName = keys.next();
+                                    JSONObject menuItem = structure0.getJSONObject(keyName);
+                                    //ignoring the order = 1 item, whatever the hell it might be.
+                                    if (menuItem.getInt("_order") == 0) {
+                                        newStructure0.put(keyName, menuItem);
+                                        continue;
+                                    }
+                                    menuItem.put("_order", menuItem.getInt("_order")+1);
+                                    newStructure0.put(keyName, structure0.getJSONObject(keyName));
+                                } catch (JSONException e) {
+                                    LOGGER.error("could not update lhnavigation \"{}\" menu ordering", keyName);
+                                }
+                            }
+                            structure0 = newStructure0;
+                        }
+                            
+                            
+                        
                         if (structure0 != null && structure0JsonAdditions != null) {
                             //extract searchsakaiId from JSONObject
                             JSONObject sakai2sites;
@@ -113,7 +138,7 @@ public class HybridSitesMigrator implements PropertyMigrator {
                                 structure0.put("sakai2sites", sakai2sites);
                                 String structure0String = structure0.toString();
                                 searchSakaiId = sakai2sites.getString("_ref");
-                                
+
                                 content.setProperty("structure0", structure0String);
                                 properties.put("structure0", structure0String);
                                 contentManager.update(content);
@@ -126,7 +151,7 @@ public class HybridSitesMigrator implements PropertyMigrator {
                     } else {
                         LOGGER.error("Missing structure0 object");
                     }
-                    
+
                     //need to setup new datastore for sakai2sites
                     if (searchSakaiId != null) {
                         String elementsPath = new StringBuffer(content.getPath()).append("/")
@@ -186,49 +211,48 @@ public class HybridSitesMigrator implements PropertyMigrator {
     private JSONObject setupSakai2sitesStructure(final Iterable<String> childPaths) {
         try {
             JSONObject structure0Json = new JSONObject();
-            if (structure0Json != null && !structure0Json.has("sakai2sites")) {
-                //generate a linking sakaiID datastore.
-                HashSet<String> existingIDs = Sets.newHashSet();
-                for (String childPath : childPaths) {
-                    String[] results = childPath.split(privSpace + "/");
-                    for(String result : results) {
-                        existingIDs.add(result);
-                    }
+            
+            //generate a linking sakaiID datastore.
+            HashSet<String> existingIDs = Sets.newHashSet();
+            for (String childPath : childPaths) {
+                String[] results = childPath.split(privSpace + "/");
+                for(String result : results) {
+                    existingIDs.add(result);
                 }
-                String searchSakaiId = null;
-                //Will attempt <sanityBreak> times to generate a non-colliding widgetId.
-                int sanityBreak = 1000;
-                while (sanityBreak > 0) {
-                    String newID = generateNewId() + "2345";
-                    if (!existingIDs.contains(newID)) {
-                        searchSakaiId = newID;
-                        break;
-                    } else {
-                        sanityBreak--;
-                    }
-                }
-                
-                if (searchSakaiId != null) {
-                    JSONObject main = new JSONObject();
-                    main.put("_ref", searchSakaiId);
-                    main.put("_order", 0);
-                    main.put("_title", "My Sakai 2 Sites");
-                    
-                    JSONObject sakai2sites = new JSONObject();
-                    sakai2sites.put("_ref", searchSakaiId);
-                    sakai2sites.put("_title", "My bSpace sites");
-                    sakai2sites.put("_order", 2);
-                    sakai2sites.put("_canEdit", true);
-                    sakai2sites.put("_reorderOnly", true);
-                    sakai2sites.put("_nonEditable", true);
-                    sakai2sites.put("main", main);
-                    
-                    structure0Json.put("sakai2sites", sakai2sites);
-                    return structure0Json;
+            }
+            String searchSakaiId = null;
+            //Will attempt <sanityBreak> times to generate a non-colliding widgetId.
+            int sanityBreak = 1000;
+            while (sanityBreak > 0) {
+                String newID = generateNewId() + "2345";
+                if (!existingIDs.contains(newID)) {
+                    searchSakaiId = newID;
+                    break;
                 } else {
-                    //log error generating id.
-                    LOGGER.error("Could not generate a non-colliding _ref id");
+                    sanityBreak--;
                 }
+            }
+            
+            if (searchSakaiId != null) {
+                JSONObject main = new JSONObject();
+                main.put("_ref", searchSakaiId);
+                main.put("_order", 0);
+                main.put("_title", "My Sakai 2 Sites");
+                
+                JSONObject sakai2sites = new JSONObject();
+                sakai2sites.put("_ref", searchSakaiId);
+                sakai2sites.put("_title", "My bSpace sites");
+                sakai2sites.put("_order", 1);
+                sakai2sites.put("_canEdit", true);
+                sakai2sites.put("_reorderOnly", true);
+                sakai2sites.put("_nonEditable", true);
+                sakai2sites.put("main", main);
+                
+                structure0Json.put("sakai2sites", sakai2sites);
+                return structure0Json;
+            } else {
+                //log error generating id.
+                LOGGER.error("Could not generate a non-colliding _ref id");
             }
         } catch (JSONException e) {
             LOGGER.error("structure0 not a JSON object", e);
