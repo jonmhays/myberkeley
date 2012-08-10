@@ -9,5 +9,4 @@ define(["config/config"], function(config) {
     };
     config.showSakai2=true;
     config.useLiveSakai2Feeds=true;
-    config.hybridCasHost="bspace.berkeley.edu";
 });
