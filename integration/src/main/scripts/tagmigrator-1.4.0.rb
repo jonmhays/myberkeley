@@ -111,7 +111,7 @@ module MyBerkeleyData
         elsif (itemtype == "sakai/group-profile")
           itemid = item['sakai:group-id']
           itempath = "~#{itemid}/public/authprofile"
-          deleteitempaths = ["#{itempath}.update.html", "system/userManager/user/#{itemid}.update.html"]
+          deleteitempaths = ["#{itempath}.update.html", "system/userManager/group/#{itemid}.update.html"]
         else
           @log.warn("Skipping unknown type #{itemtype}")
           next
