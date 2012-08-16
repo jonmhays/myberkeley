@@ -183,6 +183,24 @@ module MyBerkeleyData
         return user_props
     end
 
+    def load_demo_users
+      all_data = JSON.load(File.open "demo_users_json.js", "r")
+      users = all_data['users']
+      loaded_users = Array.new
+      users.each do |user|
+        loaded_user = load_defined_demo_user user
+        puts "loaded user: #{loaded_user.inspect}"
+      end
+      return loaded_users
+    end
+
+    def load_defined_demo_user user
+        username = user[0]
+        user_props = user[1]
+        (loaded_user, new_user) = load_user username, user_props, "testuser"
+        return loaded_user
+    end
+
     def getBasicProfileContent(user_props)
       basicProps = []
       BASIC_PROFILE_PROPS.each do |prop|
@@ -261,6 +279,5 @@ end
 if ($PROGRAM_NAME.include? 'ucb_data_loader.rb')
   puts "will load data on server #{ARGV[0]}"
   sdl = MyBerkeleyData::UcbDataLoader.new ARGV[0], ARGV[1]
-  sdl.load_dev_advisers
-  sdl.load_calnet_test_users
+  sdl.load_demo_users
 end
